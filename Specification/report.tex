@@ -1,0 +1,587 @@
+\documentclass[12pt]{article}
+
+\usepackage{graphicx}
+\usepackage{paralist}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{hhline}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{multicol}
+\usepackage{url}
+\usepackage{hyperref}
+
+\oddsidemargin -10mm
+\evensidemargin -10mm
+\textwidth 160mm
+\textheight 200mm
+\renewcommand\baselinestretch{1.0}
+
+\pagestyle {plain}
+\pagenumbering{arabic}
+
+\newcounter{stepnum}
+
+%% Comments
+
+\usepackage{color}
+
+\newif\ifcomments\commentstrue
+
+\ifcomments
+\newcommand{\authornote}[3]{\textcolor{#1}{[#3 ---#2]}}
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+\else
+\newcommand{\authornote}[3]{}
+\newcommand{\todo}[1]{}
+\fi
+
+\newcommand{\wss}[1]{\authornote{blue}{SS}{#1}}
+
+\title{Assignment 4 Specification}
+\author{Travis Moore}
+
+\begin {document}
+
+\maketitle
+This Module Interface Specification (MIS) document contains modules, types and
+methods used to support implementing the game 2048. The goal of the game is to get the highest score possible or get the tile 2048. You get score by combining tiles with the same number that are next to each other. Every time you connect two tiles into one, the number from the resulting tile will be added to your score. You have four move options. You can either shift all tiles up, down, left or right. A new tile in a randomly generated location will be added every time you successfully move the tiles on the board. The game can be launched in the terminal by typing \textbf{make expt} in the A4 folder.
+\newpage
+\section* {Likely Changes}
+
+\begin{itemize}
+    \item Change of the Board Size. Almost every function that worked with the size of the board used the state variable \textit{size} instead of hard coding the current size of the board (4x4).
+    \item My design considers the likely change of the visual display. 
+    \item My design considers change of different inputs that the controller will react to.
+\end{itemize}
+
+\section* {Overview of The Design}
+
+$\ \ \ \ $ This design uses the Module View Controller (MVC) design pattern, and Singleton design pattern. Controller, BoardT (model module), and UserView (view module) are the following MVC components. The Singleton pattern is implemented in the UserView and Controller modules. Both of those classes can only have one instance. getInstance() has to be called to create the object for both of those classes.\\\\
+$\ \ \ \ $ The MVC pattern is implemented by allowing the BoardT module to store the state and current status of the game. UserView is the view module that displays the state of the game board using text-based graphics. Finally, the Controller module is the controller that handles input from the user and connects BoardT with UserView. 
+
+
+\newpage
+\section* {UserView Module}
+
+\subsection*{Module}
+
+UserView
+
+
+\subsection* {Uses}
+
+BoardT
+
+\subsection* {Syntax}
+
+\subsubsection* {Exported Constants}
+
+None
+
+\subsubsection* {Exported Types}
+
+None
+
+\subsubsection* {Exported Access Programs}
+
+\begin{tabular}{| l | l | l | p{5cm} |}
+\hline
+\textbf{Routine name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions}\\
+\hline
+getInstance & ~ & UserView & \\
+\hline
+printWelcomeMessage & &  & ~\\
+\hline
+printEndingMessage & BoardT &  & ~\\
+\hline
+printBoard & BoardT &  & ~\\
+\hline
+printBoard2 & BoardT &  & ~\\
+\hline
+
+\end{tabular}
+
+\subsection* {Semantics}
+
+\subsubsection* {Environment Vairables}
+
+window: A terminal that will display the game to the computer screen.
+
+\subsubsection* {State Variables}
+
+visual: UserView
+
+\subsubsection* {State Invariant}
+
+None
+
+\subsubsection* {Assumptions}
+
+\begin{itemize}
+    \item The UserView constructor is called before any other access routine is called for a UserView object.
+\end{itemize}
+
+\subsubsection* {Access Routine Semantics}
+getInstance(): 
+\begin{itemize}
+    \item transition: visual $:=$ visual = null $implies$ new UserView()
+    \item out: self
+    \item exception: none
+\end{itemize}
+
+\noindent printWelcomeMessage(): 
+\begin{itemize}
+    \item transition: window $:=$ Welcome to 2048 message is displayed above board during game.
+    \item exception: none
+\end{itemize}
+
+\noindent printEndingMessage(board): 
+\begin{itemize}
+    \item transition: window $:=$ Game over message is displayed, showing the final score.
+    \item exception: none
+\end{itemize}
+
+\noindent printBoard(board): 
+\begin{itemize}
+    \item transition: window $:=$ The game board is displayed to the window. Cells are accessed using the getCell method from BoardT. Any cell with the number 0 will not be printed to the screen, instead a blank space will be printed. The terminal is initially cleared to allow easier transitions from every printBoard call.
+    \item exception: none
+\end{itemize}
+
+\noindent printBoard2(board): 
+\begin{itemize}
+    \item transition: window $:=$ Similar to printBoard however terminal is not intially cleared which allows the previous board to be shown. Used for when the game is over to show the final state of the game board.
+    \item exception: none
+\end{itemize}
+
+\subsubsection* {Local Functions}
+
+UserView: void $\rightarrow$ UserView\\
+Userview() $\equiv$ new UserView()
+
+\newpage
+\newpage
+
+\section* {Board ADT Module}
+
+\subsection*{Module}
+
+BoardT
+
+\subsection* {Uses}
+
+Services
+
+\subsection* {Syntax}
+
+\subsubsection* {Exported Constants}
+
+None
+
+\subsubsection* {Exported Types}
+
+size = 4    $\ \ \ \ \  //$ Board size is 4x4 
+
+\subsubsection* {Exported Access Programs}
+
+\begin{tabular}{| l | l | l | p{5cm} |}
+\hline
+\textbf{Routine name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions}\\
+\hline
+new BoardT & ~  & BoardT & ~ \\
+
+\hline
+getCell & $x : \mathbb{Z} $, $y : \mathbb{Z} $ & $\mathbb{Z} $ & ~\\ 
+\hline
+getScore & & $\mathbb{Z} $ & ~\\ 
+\hline
+addTile & & & ~\\ 
+\hline
+gameOver & & $\mathbb{B}$ & ~\\
+\hline
+moveRight & & & ~\\
+\hline
+moveLeft & & & ~\\
+\hline
+moveUp & & & ~\\
+\hline
+moveDown & & & ~\\
+\hline
+setTile & x: $\mathbb{R}$, y: $\mathbb{R}$, number: $\mathbb{Z}$ & & ~\\
+\hline
+\end{tabular}
+
+\subsection* {Semantics}
+
+\subsubsection* {State Variables}
+
+board: Seq of [size, size] of $\mathbb{R}$\\
+score: $\mathbb{Z}$\\
+
+\subsubsection* {State Invariant}
+
+None
+
+\subsubsection* {Assumptions}
+
+\begin{itemize}
+    \item Size will be a positive number.
+    \item The constructor for BoardT will be called first for each BoardT object before any other access routine is called.
+    \item Assume there is a random function that generates a random number between 0 and 1.
+    \item AddTile() will never be called when the Grid is full with numbers greater than 0.
+\end{itemize}
+
+\subsubsection* {Access Routine Semantics}
+new BoardT(): 
+\begin{itemize}
+    \item transition: \\
+          board $:= $ 
+        $\langle \begin{array}{c}
+      \langle \mbox{0,0,0,0} \rangle\\
+       \langle \mbox{0,0,0,0} \rangle\\
+        \langle \mbox{0,0,0,0} \rangle\\
+         \langle \mbox{0,0,0,0} \rangle\\
+
+      \end{array} \rangle$ $\land$ addTile() $\land$ addTile() $\\$ $\textit{// two tiles randomly added after}$  \\
+
+    \item output: out $:=$ self
+    \item exception: none
+\end{itemize}
+getCell(x,y): 
+\begin{itemize}
+    \item transition: none
+    \item output: out $:=$ board[x][y]
+    \item exception: none
+\end{itemize}
+getScore(): 
+\begin{itemize}
+    \item transition: none
+    \item output: out $:=$ score
+    \item exception: none
+\end{itemize}
+
+setTile(x,y,number): 
+\begin{itemize}
+    \item transition: board[x][y] $:=$ number
+    \item output: none
+    \item exception: none
+\end{itemize}
+
+
+
+
+
+addTile(): 
+\begin{itemize}
+    \item transition: (board[newCellLocation()][newCellLocation()] = 0)\\ $\implies$ board[newCellLocation()][newCellLocation()] $:=$ newTileNumber()$|$True $\implies$ addTile() $\textit{// Find a empty tile to put new value in}$
+    \item out: none
+    \item exception: none
+\end{itemize}
+gameOver(): 
+\begin{itemize}
+    \item transition: none
+    \item out: $\lnot \exists$($\forall i : \mathbb{N}|i < size \land (\forall j : \mathbb{N}| j < size-1):board[i][j] = board[j][i] \lor board[i][j+1] = board[i][j+1] \lor board[i][j] = 0)$ \\ $\textit{// continue game If a cell has 0 or two cell values equal to each other are next to each other }$
+    \item exception: none
+\end{itemize}
+moveRight(): 
+\begin{itemize}
+    \item transition: board $:=$ $\forall i \in [0...size-1]:$ shiftRowRight(i) $\land$ $\forall j \in [0...size-1]:$ board[i][j] = board[i][j-1] $\implies$ score $:=$ score + board[i][j]*2 $\land$ board[i][j] $:=$ board[i][j] + board[i][j-1] $\land$ board[i][j-1] $:=$ 0 $\land$ addTile() \\
+    $\textit{// Move all tiles right, add score if they match and are next to each other, add new tile after}$
+    \item out: none
+    \item exception: none
+\end{itemize}
+moveLeft(): 
+\begin{itemize}
+    \item transition: board $:=$ $\forall i \in [size-1...0]:$ shiftRowLeft(i) $\land$ $\forall j \in [0...size-1]:$ board[i][j] = board[i][j-1] $\implies$ score $:=$ score + board[i][j]*2 $\land$ board[i][j] $:=$ board[i][j] + board[i][j-1] $\land$ board[i][j-1] $:=$ 0 $\land$ addTile()
+    \item out: none
+    \item exception: none
+\end{itemize}
+moveUp(): 
+\begin{itemize}
+    \item transition: board $:=$ $\forall i \in [size-1...0]:$ shiftColumnUp(i) $\land$ $\forall j \in [0...size-1]:$ board[j][i] = board[j+1][i] $\implies$ score $:=$ score + board[j][i]*2 $\land$ board[j][i] $:=$ board[j+1][i] + board[j][i] $\land$ board[j+1][i] $:=$ 0 $\land$ addTile()
+\end{itemize}
+moveDown(): 
+\begin{itemize}
+    \item transition: board $:=$ $\forall i \in [size-1...0]:$ shiftColumnUp(i) $\land$ $\forall j \in [size-1...0]:$ board[j][i] = board[j-1][i] $\implies$ score $:=$ score + board[j][i]*2 $\land$ board[j][i] $:=$ board[j+1][i] + board[j][i] $\land$ board[j-1][i] $:=$ 0 $\land$ addTile()
+\end{itemize}
+\subsubsection* {Local functions}
+
+shiftRowRight: $\mathbb{R} \rightarrow \mathbb{B}$\\
+shiftRowRight(row) $\equiv$ $\forall i \in|[0...size-1]:$ shiftNumRight(row) = 1 $\implies$ True \\ $\textit{// call shiftNumRight for every i value, if it returns 1 return true}$ \\\\
+
+\noindent shiftNumRight: $\mathbb{R} \rightarrow \mathbb{R}$\\
+shiftNumRight(row) $\equiv$ $\forall i \in[size-1...0]:$ board[row][i] = board[row][i-1] $\implies$ 1 $\land$ board[row][i] := board[row][i-1] $\land$ board[row][i-1] := 0 $|$True $\implies$ -1 \\
+$\textit{// Shift each number in the row right if possible, return 1 if a tile is shifted}$\\\\
+
+\noindent shiftRowLeft: $\mathbb{R} \rightarrow \mathbb{B}$\\
+shiftRowLeft(row) $\equiv$ $\forall i \in [0...size-1]:$ shiftNumLeft(row) = 1 $\implies$ True \\\\
+
+\noindent shiftNumLeft(row):  $\mathbb{R} \rightarrow \mathbb{R}$\\
+shiftNumLeft(row) $\equiv$ $\forall i \in [0...size-1]:$ board[row][i] = board[row][i+1] $\implies$ 1 $\land$ board[row][i] := board[row][i+1] $\land$ board[row][i+1] := 0 $|$True $\implies$ -1 \\\\
+
+\noindent shiftColumnUp: $\mathbb{R} \rightarrow \mathbb{B}$\\
+shiftColumnUp(row) $\equiv$ $\forall i \in [0...size-1]:$ shiftNumUp(row) = 1 $\implies$ True\\\\
+
+\noindent shiftNumUp:  $\mathbb{R} \rightarrow \mathbb{R}$\\
+shiftNumUp(column) $\equiv$ $\forall i \in |[0...size-1]:$ board[i][column] = board[i+1][column] $\implies$ 1 $\land$ board[i][column] := board[i+1][column] $\land$ board[i+1[column] := 0 $|$True $\implies$ -1 \\\\
+
+\noindent shiftColumnDown: $\mathbb{R} \rightarrow \mathbb{B}$\\
+shiftColumnUp(row) $\equiv$ $\forall i \in [0...size-1]:$ shiftNumUp(row) = 1 $\implies$ True \\\\
+
+\noindent shiftNumDown:  $\mathbb{R} \rightarrow \mathbb{R}$\\
+shiftNumDown(column) $\equiv$ $\forall i \in [size-1...0]:$ board[i][column] = board[i-1][column] $\implies$ 1 $\land$ board[i][column] := board[i-1][column] $\land$ board[i-1[column] := 0 $|$True $\implies$ -1 \\\\
+
+
+
+\newpage
+
+\section* {Services Module}
+
+\subsection*{Module}
+
+Services
+
+\subsection* {Uses}
+
+None
+
+\subsection* {Syntax}
+
+\subsubsection* {Exported Constants}
+
+None
+
+\subsubsection* {Exported Types}
+
+None
+
+\subsubsection* {Exported Access Programs}
+
+\begin{tabular}{| l | l | l | p{5cm} |}
+\hline
+\textbf{Routine name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions}\\
+\hline
+newCellLocation & ~ & $\mathbb{R}$ & \\
+\hline
+getName & & String & ~\\
+\hline
+
+\end{tabular}
+
+\subsection* {Semantics}
+
+\subsubsection* {State Variables}
+
+None
+
+\subsubsection* {State Invariant}
+
+None
+
+\subsubsection* {Assumptions}
+
+We have access to a function that generates a random number between 0 and 1.
+
+\subsubsection* {Access Routine Semantics}
+newCellLocation(): 
+\begin{itemize}
+    \item transition: none
+    \item out: RandomNum $<$ 0.25 $\rightarrow$ 0 $|$ RandomNum $<$ 0.5 $\rightarrow$ 1 $|$ RandomNum $<$ 0.75 $\rightarrow$ 2 $|$ 3
+    \item exception: none
+\end{itemize}
+
+\noindent newTileNumber(): 
+\begin{itemize}
+    \item transition: none
+    \item out: RandomNum $<$ 0.90 $\rightarrow$ 2 $|$ 4
+    \item exception: none
+\end{itemize}
+
+
+\newpage
+
+\section* {Controller Module}
+
+\subsection*{Module}
+
+Controller
+
+\subsection* {Uses}
+
+BoardT, UserView
+
+\subsection* {Syntax}
+
+\subsubsection* {Exported Constants}
+
+None
+
+\subsubsection* {Exported Types}
+
+None
+
+\subsubsection* {Exported Access Programs}
+
+\begin{tabular}{| l | l | l | p{5cm} |}
+\hline
+\textbf{Routine name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions}\\
+\hline
+getInstance & BoardT, UserView & Controller& \\
+\hline
+initializeGame & &  & ~\\
+\hline
+showWelcomeMessage & &  & ~\\
+\hline
+showEndMessage & &  & ~\\
+\hline
+showBoard & &  & ~\\
+\hline
+run2048 & &  & ~\\
+\hline
+
+\end{tabular}
+
+\subsection* {Semantics}
+\subsubsection* {Environment Variables}
+scanner: Scanner(System.in)
+\subsubsection* {State Variables}
+
+model: BoardT
+view: UserView
+controller: Controller
+
+\subsubsection* {State Invariant}
+
+None
+
+\subsubsection* {Assumptions}
+
+\begin{itemize}
+    \item The Controller constructor is called before any other access routine is called for a Controller object.
+    \item UserView and Boardt instances have been created before calling the Controller constructor
+\end{itemize}
+
+\subsubsection* {Access Routine Semantics}
+getInstance(model,view): 
+\begin{itemize}
+    \item transition: controller $:=$ controller = null $implies$ new controller(model,view)
+    \item out: self
+    \item exception: none
+\end{itemize}
+
+\noindent initializeGame(): 
+\begin{itemize}
+    \item transition: model $:=$ new BoardT()
+    \item out: none
+    \item exception: none
+\end{itemize}
+
+\noindent showWelcomeMessage(): 
+\begin{itemize}
+    \item transition: view $:=$ view.printWelcomeMessage
+    \item out: none
+    \item exception: none
+\end{itemize}
+
+\noindent showEndMessage(): 
+\begin{itemize}
+    \item transition: view $:=$ view.printEndMessage
+    \item out: none
+    \item exception: none
+\end{itemize}
+
+\noindent showBoard(): 
+\begin{itemize}
+    \item transition: view $:=$ view.printBoard(model)
+    \item out: none
+    \item exception: none
+\end{itemize}
+
+\noindent run2048(): 
+\begin{itemize}
+    \item transition: Runs the game. Game starts with the initial board and welcome message. Then it gets input from the keyboard and executes the specific method bind to the input. "w" will call moveUp from BoardT, "s" will call moveDown from BoardT, "a" will call moveLeft from BoardT, and "d" will call moveRight from BoardT. "p" will end the game, allowing the user to quit earlier if needed to. Besides that, game will run until the player loses. Any other input will be rejected and a prompt asking for correct input will show. At the end of the game the final score and final board will be displayed.
+    \item out: none
+    \item exception: none
+\end{itemize}
+
+
+\newpage
+
+\section* {Critique of The Design}
+
+\begin{itemize}
+
+    \item I would say the design is mostly essential. However the \textit{setTile}(x,y,num) in BoardT is not essential. I included this method because it made it easier to create high quality test cases. In reality it is not used in the actual game because I made the \textit{addTile()} method as random as possible.
+    
+    \item I would say my Design is general, I accounted for the fact that there are many variations of 2048, the main variation being the size of the game board. The only method that would need to be changed if the size of the board is changed is the newCellLocation() function in Services. It was hard to make this function more generic as I was using percentages to calculate the index. However this could have been avoided If I implemented the addTile() method differently.
+    
+    \item I wouldn't say the design is fully minimal, as there are some access routine with independent services. Unfortunately I ran out of time to fix these methods. 
+    
+    \item The design is very consistent, all naming conventions of the methods are the same, as well as the ordering of parameters in functions.
+    \item The design has high cohesion, for example the Controller module works very closely with the UserView module and BoardT module to run the game. 
+    \item The design implements information hiding, for example state variables are set as private and local functions are private as well.
+    
+    \item The addTile() method in BoardT was poorly designed in my opinion. I was too focused on making it as random as possible. A better design would have been to keep track of which cells had a value of 0 and pick a random cell from that list, instead I was picking from every cell in the grid. This could lead to very bad run-time when the grid is really big and there are only a couple available spots to put a new number in.
+    \item I could have added a better way of handling the end of the game. For example I could have added a option to restart the game instead of ending the program as soon as the game ends.
+    \item I could have implemented BoardT using Singleton pattern, as I did with the controller and the UserView class.
+
+    \item I think the design follows the rules of the game well, for example I made sure to test for certain cases where there are 4 of the same tiles in a row/column, resulting in four tiles being added in a same move in the same row or column.
+    \item My design could use more checks to avoid unexpected exceptions, however I had a hard time seeing where exceptions could arise, so I did not have any checks in this design.
+    
+\end{itemize}
+
+\newpage
+\section* {Questions}
+1.
+\newpage
+
+\lstset{language=Java, basicstyle=\tiny, breaklines=true, showspaces=false,
+  showstringspaces=false, breakatwhitespace=true}
+%\lstset{language=C,linewidth=.94\textwidth,xleftmargin=1.1cm}
+
+\def\thesection{\Alph{section}}
+
+\section{Code for A4Example.java}
+
+\noindent \lstinputlisting{../src/A4Example.java}
+
+\newpage
+
+\section{Code for AllTests.java}
+
+\noindent \lstinputlisting{../src/AllTests.java}
+
+\newpage
+
+\section{Code for BoardT.java}
+
+\noindent \lstinputlisting{../src/BoardT.java}
+
+\newpage
+
+\section{Code for Controller.java}
+
+\noindent \lstinputlisting{../src/Controller.java}
+
+\newpage
+
+\section{Code for Services.java}
+
+\noindent \lstinputlisting{../src/Services.java}
+
+\newpage
+
+\section{Code for TestBoardT.java}
+
+\noindent \lstinputlisting{../src/TestBoardT.java}
+
+\newpage
+
+\section{Code for UserView.java}
+
+\noindent \lstinputlisting{../src/UserView.java}
+
+\newpage
+
+\end {document}
