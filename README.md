@@ -17,4 +17,9 @@ make test
 ```
 Here's a snapshot of the game:
 
+![game](images/game.PNG)
+
+Game over!
+
+![game](images/game_over.PNG)
 
