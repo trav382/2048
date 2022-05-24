@@ -5,7 +5,7 @@ There is also design specification that can be found in the *Specification* fold
 
 ## Usage
 
-To run the code, go to the directory containing the **Makefile** and type the following in a CLI:
+To run the code, go to the directory containing the **Makefile** and type the following in the command line:
 
 ``` 
 make expt 
